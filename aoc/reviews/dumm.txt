@@ -1,0 +1,430 @@
+
+One of the main problems in software engineering is to effectively control the
+quality of software. Quality concerns both functional properties
+(does it do things correctly) and non-functional properties, e.g., 
+is the system secure, and does it run within a given amount of memory and time? 
+Both can be formulated as (system) requirements, and the issue is then 
+to what extent we can guarantee that the implementation of these requirements is correct. 
+In general, not every requirement is equally important. An important 
+issue then is allow efforts to be focused on those requirements
+that are considered the most essential for the system. In this proposal I describe
+an approach to deal with these problems using static program analysis.
+
+\subsubsection*{Redundancy}
+
+Even in the early days of programming, a well-written program 
+contained a large amount of reduncancy, usually in the form of documentation in 
+a natural language. Although neither the code nor the documentation may actually 
+describe the intended situation, an inconsistency implies a need for a closer look. 
+One might say that code and documentation constitute two, usually quite different, 
+viewpoints on what the system is supposed to do and how.
+The more dissimilar the viewpoints, the less likely
+a mistake will be made in exactly the same way in both. 
+Furthermore, documentation usually gives a more abstract view of what is 
+intended, and is therefore less
+cluttered by detail and more easy to get correct. My view is then that
+\emph{redundancy}, through the introduction of other, more abstract
+viewpoints besides that of the source code itself, can be used to improve 
+the quality of software systems.
+
+The problem with natural language documentation is that it lacks a formal 
+description, and therefore, \emph{automatic verification} of
+the consistency of documentation and code is near impossible. 
+Automation can be achieved by introducing a formal language of \emph{annotations}
+to be used as a form of documentation. Type signatures are a typical example of 
+annotations and occur in diverse programming languages such as Java and the 
+polymorphic higher-order functional language Haskell~\cite{Haskell98RevisedReport}.
+In Haskell such signatures are actually optional: all types can be \emph{inferred} by
+Damas and Milner's algorithm W~\cite{damas82principal}. However, it turns out that
+if type signatures are omitted, it may be difficult to establish where a mistake was
+made, because in the absence of type signatures the types derived for expressions
+in the program can be hard to trace. One of the ways of coping, and this is indeed
+how it is taught to students, is to use type signatures to specify the type
+of the functions one is going to write. Being able to write code consistent
+with a priorly specified type, gives us more confidence that the functionality 
+is as it was intended. Indeed, this is a good example of having two different 
+viewpoints: that of the code itself and the more abstract view of the types of the 
+values that the code manipulates.
+
+Annotations can be used in two ways: dynamically and statically. In the former case,
+properties of the execution are monitored at runtime, in the latter,
+they are considered already at compile-time. 
+The main advantage of the dynamic approach is that it is more light-weight; 
+the main advantage of the static approach is that the established properties  
+hold for \emph{all} possible executions of the generated code, 
+not only those (finitely many) executions that have been observed. Note that
+static and dynamic analysis are not competitors, indeed they can complement
+each other well. This proposal deals only with static analysis.
+
+Static analyses can be mathematically quite advanced, which might be one of the 
+reasons why most compilers silently apply static analyses without involving 
+the programmer at all, especially if they are (only) intended to improve the runtime 
+behaviour of the generated code. Often a programmer must then resort 
+to all kinds of (obfuscating) hacks to achieve the intended efficiency.
+For example, it is possible to write down the identity function on booleans 
+in Haskell~98 as follows
+
+> id x = x && True ,
+
+(or in any of the other hacks that may come to mind).
+However, it is much more elegant to simply write down the identity function
+
+> id :: Bool -> Bool
+> id x = x
+
+and have its type signature indicate that it may only be applied to booleans.
+
+Moreover, due to the undecidability of the Halting Problem, static analyses are 
+at most approximative in their answers: we achieve soundness by giving up 
+completeness or vice versa.
+Therefore, it is not even unlikely that a programmer may want to assist the compiler 
+to come up with a better analysis result in some cases, cases that may be 
+essential in obtaining valid and efficient code.
+
+\extended{
+\subsubsection*{Modularity}
+
+Most modern programming languages provide some kind of module system to decompose
+large systems. One of the main reasons is the law of Parnas, which reads:
+only that which is hidden can be safely changed. What applies to code, should, as much
+as possible, also apply to analysis result: if possible properties of code that
+is hidden should not interfere with the properties of code in other modules.
+Additionally, for reasons of usability, the notation to specify the properties
+of parts exported by modules should be concise and easy to understand. Again, type
+signatures are a good example. Essentially, they give an abstract representation
+In practice these turn out to be concise enough, although in theory they could
+be exponential in the size of the program. Preferably, a program analysis
+should not need to consider the sources of the entire software system all over again
+when analyzing a particular module, to ensure scalability. Of course, this depends 
+very much on the program analysis. In a functional language, we can hardly
+expect to perform control flow analysis without doing a whole program analysis.
+In any case, it will be useful to investigate efficient representations of
+analysis results, that may be provided by the programmer, but for now I only note that
+modularity is an issue that needs to be addressed when building a program analysis
+framework. 
+}
+
+\subsubsection*{Graduality}
+
+Ensuring a certain measure of correctness and efficiency takes effort. It is natural
+to want to channel these efforts to those parts of the program that need it most:
+why spend time annotating code that is either obviously correct or 
+proven correct elsewhere, and which runs sufficiently fast? It is therefore essential to have some 
+\emph{graduality} when it comes to introducing redundancy. In case of unstructured 
+documentation you simply omit that which you do not 
+want to describe, but in formal notation, the formal language itself needs to be 
+able to deal correctly with partial information.
+
+In Haskell it is possible to give a type signature or to omit it, but you are not allowed
+to specify a partial type signature and to let the remainder be filled in by the
+inference algorithm. This is quite a drawback, because it can easily result in a situation
+where an abundance of parameters makes the programmer decide not to give a type signature,
+although for some parameters he would have liked to. Instead, the programmer might want
+to simply indicate the number of parameters, and the types of the ninth and tenth
+parameter explicitly and let the compiler do the rest~\cite{DS:exploiting}. 
+This is a good example of a lack of graduality in type analysis, 
+which is present even in Haskell. 
+
+\extended{
+Summarizing, a type signature of an identifier specifies two relations, one with
+the definition of the variables and one with the uses of that variable.
+In the former case, the type of the identifier is equal to
+or an instance of the type derived for the body of the identifier.
+If the signature is omitted, then the type of the identifier is equal to 
+the type derived for its definition.
+For the second, the type of any of its uses is equal to or 
+a special case of the type specified for the identifier. 
+}
+
+\subsubsection*{Modality}
+
+The use of partial type signatures is an essential change the foregoing.
+Not the (partial) type that was specified by the programmer will be used in
+establishing the relationship with types elsewhere in the program, but the
+partial type complemented by information gathered by the type inferencer.
+In other words, the partial type signature is an \emph{under-approximation} 
+of the best possible type for the identifier. Under-approximations can be 
+considered synonymous to \emph{guarantee}. In general, we can expect a 
+definition to have any number of guarantees. The term \emph{modality} refers to 
+the fact that the interpretation of properties specified by the programmer can
+vary: guarantees \emph{must} be satisfied, while \emph{overrides}, to be discussed next,
+are \emph{assumed} to be valid.
+
+In some languages, there is no type system to speak of, and if there are any
+provisions for making programs more reliable, this will typically be done by
+means of \emph{soft typing}~\cite{cartwright91soft}. In this case, instead of 
+allowing programs that can only go right, the compiler allows all programs that might go right. 
+If the language happens to be dynamically typed, errors will still get caught, 
+but some errors will be detected only at runtime. 
+Something similar would occur if, in Haskell, we could define a function like
+
+> nand b c = not(b && c)
+
+and give it the type |forall a. a -> a -> Bool|. This is only safe 
+if we know that only booleans are passed into |nand|. We shall not easily allow 
+this in Haskell, because the type system is intrinsic to the language, but in the case 
+of other static analyses, there are at least three situations in which we would
+want to override (over-approximate) whatever the compiler may come up with.
+First, an overriding specification may be simpler and more elegant than the best 
+possible analysis that is sound for a particular definition. In this case, it 
+may also be necessary to provide additional under-approximations to ensure a certain
+measure of soundness as well. Second, knowing that no sound analysis can possibly 
+be complete, it may simply be the case that the programmer
+actually knows that what he specifies is correct, within the context of his program,
+although a compiler may not be able to prove this. Third, it may be 
+essential for reasons of efficiency that the programmer helps the compiler. 
+For example, a context insensitive control flow analysis (0CFA) can be performed in 
+polynomial time. However, the context-sensitive variants, kCFA ($k>0$), are all 
+NP-hard, i.e., infeasible~\cite{HM:cfacomplexity} and a compiler builder may 
+therefore decide to restrict his implementation to 0CFA. Especially when 
+optimization of code is concerned, it can be essential to have more precise 
+results for at least parts of the program. Overrides can then be used by the 
+programmer to specify, say, a 1CFA analysis 
+result, and the compiler can then use this information in its 0CFA analysis for the 
+unannotated parts of the program. 
+
+Overrides, guarantees and the interplay between them for a particular analysis 
+and, moreover, between analyses, more than ever raise the tricky issue of generating 
+good feedback. As a consequence of my work with Bastiaan Heeren, I learned 
+that being able to single out a piece of code as being the source of a problem 
+can be very advantageous for the programmer, but misleading the programmer tends
+to be worse. The main problem, of course, is that a compiler does not know the 
+intentions of the programmer. Having multiple viewpoints/analyses is supposed
+to help the compiler arrive at a good diagnosis. This leads me to my final topic.
+
+\subsubsection*{The integration of viewpoints}
+
+Recall that each static analysis represents a particular viewpoint, usually an 
+abstraction of the complete source code. At some point, we need to integrate 
+the findings for each viewpoint to help decide what might be the cause of 
+possible inconsistencies. This means that heuristics 
+need to be defined that consider the analysis results for multiple analyses. 
+This implies that we should not consider each analysis in separation (as it usually
+is in the literature), but as an instance of a more general framework, built upon a particular 
+combination of technologies. In 2b I shall describe a combination that seems
+very attractive to me.
+
+Moreover, as we have shown in \cite{hage07generic}, it is quite possible to 
+combine the specification (and therefore also implementation) of different 
+analyses. Indeed, one may expect that analyses can be built more easily
+using auxiliary analyses such as contra- and co-variance, or even simple
+type analysis. Indeed, many papers describe a type analysis and 
+another analysis, e.g., binding time analysis, in a single type and effect system.
+In my opinion, it would be better to view binding time analysis as an analysis
+that uses type analysis as an auxiliary analysis, especially since it will not
+be the only analysis that builds upon it. Therefore, to lighten the burden 
+on the compiler developer, it makes sense to offer opportunities for combining and composing
+analyses.
+
+\secpro{2b}{Approach}
+
+In the approach described above, redundancy is created by having multiple viewpoints
+on the source code of a system, each expressed as a static analysis. Each such
+analysis will be an instance of a framework, yet to be developed, that supports
+\begin{itemize}
+  \item graduality, by means of under-approximations of analysis results,
+  \item the ability to override analysis results
+  \item the ability to construct analyses from subsidiary analyses,
+  \item with a focus on feedback to help programmers deal with these new abilities
+  \item and both provides, and allows the programmer to provide, a collection of
+        heuristics to resolve inconsistencies. Some of these heuristics will
+        consider the results of multiple analyses together.
+\end{itemize}
+
+It is my belief that such a system can be built on top of a number of existing
+technologies, most notably constraint solving~\cite{aiken95constraint-based}, 
+type and effect systems \cite{N:tandesurvey,LG:effectsystems}, 
+attribute grammars, subeffecting and qualified types~\cite{jones92theoryofqualifiedtypes}. 
+Choosing a particular vocabulary for specifying program analyses is important, 
+because it allows us to provide a generic implementation with all the benefits that entails: fewer 
+proofs, less effort and so on. Furthermore, the task of integrating viewpoints to 
+generate better feedback, will become greatly simplified.
+
+Except for subeffecting and qualified types, this combination of technologies
+was also part of for my Scriptable Compilers proposal accepted in the NWO Open 
+Competition of 2004. My belief that subeffecting and qualified types 
+are good candidates for the intended framework for polyvariant
+analyses for polymorphic languages, is supported by work done recently by 
+Stefan Holdermans and myself~\cite{hage07generic,hage08heap}. 
+Indeed, a major reason for this proposal is that  I want to capitalize on 
+having found such a ``sweet spot'' that may allow us to go beyond what is 
+currently state-of-the-art, without sacrificing too much by the restriction to 
+subeffecting (compared to the more usual subtyping).
+
+Since qualified types and subeffecting are a distinguishing feature 
+of this proposal, I shall consider them here in more detail.
+In \cite{hage07generic} a polyvariant usage analysis for a polymorphic 
+higher-order lazy functional language is defined. One of the essential ingredients is
+the flexible and rich theory of qualified types~\cite{jones92theoryofqualifiedtypes}. 
+A major advantage of qualified types is that they are not difficult to implement, and 
+one may even expect a Haskell compilers to already support them, in order to implement
+Haskell's type classes. Qualified types form a suitable vocabulary, because of 
+our choice to use subeffecting and not the usual, much more complicated notion 
+of (shape conformant) subtyping; both can be used to selectively weaken
+analysis information. We are investigating whether subeffecting 
+gives loss of detail and, if so, how much. We currently believe that for the 
+analyses we have considered, there is no loss in precision. 
+If we can make this intuition concrete, this is a significant advancement in the
+theory of program analysis, and type and effect systems in particular. We now have
+a student who is comparing the subeffecting and subtyping variant of a polyvariant
+binding time analysis, to see whether differences in precision can be found.
+Stefan Holdermans and I are doing the same, but for strictness analysis.
+Although there may seem to be a risk here in opting for subeffecting and not
+subtyping, the risk is smaller than it seems. Even if we find that they do not have
+the same expressive power, they might not differ by much, and the difference can
+be compensated by selective overrides by the programmer. We then still have the
+advantage of a much simpler framework, both in terms of implementation
+and efficiency.
+
+The task of one of the PhD students will be to consider an extension of the work
+of Bastiaan Heeren to more advanced type systems. The list includes concepts
+such as existential types~\cite{MP:adts,P:types}, type class extensions~\cite{jones97type}, 
+rank-$n$ types~\cite{PVWS:rankn,VWP:boxy}, GADTs~\cite{PVWW:gadts}, associated 
+type synonyms~\cite{CKPM:associatedtypewithclass,CKP:associated}, 
+and maybe even (Haskell style)  generics~\cite{loh04exploring}. 
+I believe that many of these advanced features can be captured elegantly
+by constraint-based type and effect systems. Furthermore, the clean decoupling
+of specification and implementation when formulating analyses in terms of constraints
+will allow us to shed some light on the interaction between these extensions, and determine
+how the quality of feedback can be maintained in the presence of these extensions.
+
+The approach will be the same as described in the Scriptable Compilers proposal: 
+to distill the essence of these type systems into a suitable language of constraints, 
+to develop and implement solvers for these constraints and to derive heuristics 
+to address inconsistencies. Some of these heuristics will be programmer-specifiable 
+(in the line of the type inference directives of ~\cite{HHS:scripting}).
+The specification of the analyses can be easily made using the \texttt{uuagc} 
+attribute grammar system~\cite{hut} developed in Utrecht, which can be automatically 
+turned into executable code. This greatly simplifies implementation.
+A major change with respect to the original proposal is that the student shall
+focus on subeffecting and qualified types to specify the type systems. 
+The second PhD student will deal with the introduction of different modalities and
+the consequences that has for feedback, and to apply that to analyses we have
+already worked out. More details can be found in 2d.
+
+The choice to perform our work on polymorphic, higher-order functional languages
+may need some further clarification. Conceptually, these language are among the most
+expressive and complicated that we know, with the exception maybe of dependently typed
+languages and languages that support generic programming (in the style of Generic
+Haskell, not Generic Java). Indeed, it is essential in the 
+specification of the analyses to restrict oneself to an idealized subset of a 
+real programming language. The things we can learn from the work here proposed should
+not be tied to any particular language, but to a language feature or a combination
+of these.
+
+\secpro{2c}{Innovation}
+
+Although I build on an established tradition of static (program) analysis to obtain
+more correct and efficient programs, the proposal is new in that it seeks to provide
+a general approach to support
+\begin{itemize}
+  \item graduality, to make sure that programmers
+        can put the effort where they think it is most useful, by means of underapproximations,
+  \item overrides of analysis results, to selectively go beyond what the compiler
+        offers
+  \item flexible and understandable feedback as an essential ingredient,
+        based on programmer provided or built-in heuristics,
+  \item reuse across analyses (both in constructing analyses and generating feedback)
+\end{itemize}
+enabled by a number of well-understood technologies: constraint solving, syntax-directed 
+computation, qualified types and polyvariant type and effect systems with subeffecting.
+
+As usual, the findings will be documented in a number of papers,
+and used to implement a prototype implementation to show that the ideas are 
+practical.
+
+An investigation whether the resulting technology actually pays off in practice is
+not part of this proposal, although it may in fact be undertaken at some point.
+Also, using the results of the implemented analyses to actually improve code generation 
+is not meant to be part of this proposal. The quality of analyses will 
+be established based on the precision of the derived information. Indeed, using 
+the results of, e.g., binding time analysis in partial evaluation, is often
+a very subtle issue and a study by itself; we focus here on obtaining precise 
+binding-time information at low cost.
+
+\secpro{2d}{Plan of work}
+
+In this proposal I request money for two PhD students and a postdoc.
+Roughly speaking, PhD 1 will deal with advanced type systems and feedback, PhD 2 tackles 
+modalities  and feedback, the postdoc will deal with the integration of program analyses
+and the heuristics that exploit multiple viewpoints.
+My task will be one of supervision and coordination, and of preparing the 
+several program analyses so that PhD 2 can deal with them. In 2007 usage analysis
+was completed~\cite{hage07generic}, and in 2008 we plan to deal with binding time analysis 
+(BTA)~\cite{HM94bindingtime,GSSS01bindingtime} and strictness analysis~\cite{GSS:strictness}. 
+Due to the nature of the project, using master students to accelerate the work is very well possible, but
+I do not exploit that in the planning below.
+Indeed, BTA is in fact currently tackled by a master student. Note that I have 
+made sure that each PhD has a single identifiable subject, and although they 
+can certainly use each others work and knowledge, neither depends crucially on the other.
+
+The task of the postdoc consists of two related issues: to integrate the findings
+of the PhD students into a coherent whole, so that they can concentrate
+on the program analyses respectively the issue of modality in isolation. Of course,
+working towards that goal, it may be assumed that the program analyses by themselves
+have been phrased in terms of a shared vocabulary, as discussed in 2b.
+Then he will be ready to define heuristics that consider multiple 
+program analyses at the same time. 
+Ensuring that the outcome is an efficient, well-documented and robust implementation of the
+framework is, however, not the burden of the postdoc alone, but also of the other
+participants.
+
+Based on my experience with Stefan Holdermans, eight to nine months is a good 
+estimate of the time needed to deal with an average analysis.
+Therefore, I have broken up the period into three blocks of eight months followed
+by four blocks of nine; the later tasks tend to be more complicated and time consuming.
+Note, however, that the PhD students are expected to use only week 43 up to 48 
+to compile their PhD thesis. The detailed planning can be found in Figure~\ref{planning}.
+
+
+\begin{figure}
+\noindent\begin{scriptsize}
+\begin{tabular}{||l||p{1cm}p{1cm}p{1cm}p{1cm}p{1cm}p{1cm}p{1cm}||}
+\hline
+Months    & 1 - 8        & 9 - 16  & 17 - 24  & 25 - 33  & 34 - 42  & 43 - 51 & 52 - 60 \\ 
+\hline  
+J. Hage   & usage analysis with zero-use~\cite{hage07generic} & heap recycling inference~\cite{hage08heap}
+          & exception analysis~\cite{GSSS02exception} & security analysis~\cite{VS:security}  
+          & type class extensions~\cite{jones97type}
+          & \hspace{0pt}communication analysis~\cite{NNH} & nested data parallel programming~\cite{CK:nested} \\
+          & \multicolumn{7}{c||}{\dotfill supervision and coordination \dotfill}\\
+\hline
+Phd 1     & start-up & existential types~\cite{MP:adts,P:types} & rank-n types~\cite{PVWS:rankn,VWP:boxy} & GADTs  & associated type synonyms & write-up &   \\ 
+\hline
+Phd 2     & start-up &  modality binding time & modality strictness & modality heap recycling 
+          & modality rank-n types & write-up &  \\
+\hline
+Postdoc   &        &         &          & integration & efficiency oriented heuristics 
+          & type system oriented heuristics & parallellism oriented heuristics \\
+\hline
+\end{tabular}
+\end{scriptsize}
+\caption{The detailed planning of the five year period}
+\label{planning}
+\end{figure}
+
+\subsubsection*{Research Environment}
+
+This project will be carried out within the Software Technology group at
+Universiteit Utrecht. As the website of the group makes amply clear~\cite{stgroup},
+it has a long history of building compiler oriented tools. Work progresses
+on tools such as the generic structure editor Proxima, the Generic Haskell compiler~\cite{ghcproject}, 
+the lightweight Haskell compiler Helium, and the Essential Haskell Compiler~\cite{ehc},
+many of which were built using the locally developed attribute 
+grammar system and parser combinators~\cite{hut}. 
+For example, the attribute grammar system was used intensively for writing the 
+Helium compiler, yielding a maintainable compiler with relatively little effort.
+
+For PhD students in a research group affiliated with the IPA research
+school it is possible to attend the tutorial Fall and Spring days, at which the
+student will be informed fairly deeply about various topics within the
+school. In addition, the student is expected to follow three courses
+that give him or her a good foundation in formal methods, 
+software technology and algorithms.
+
+If he or she has not already done so, the student can follow courses in the 
+Software Technology master program. Many students in our group also make 
+use of the opportunity to follow courses on subjects such as scientific writing and
+giving presentations. In the case of foreign students, they are supposed to 
+take a course in Dutch.
+

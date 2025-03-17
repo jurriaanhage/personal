@@ -1,0 +1,9 @@
+#!/bin/tcsh
+echo Trimming all images in html files
+cd $WEB/reviews
+tar cvfz bettersafethansorry.gz *.html
+foreach file (*.html)
+ changeimages.pl $file
+end
+
+

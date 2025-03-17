@@ -1,0 +1,38 @@
+<HTML>
+<HEAD>
+<TITLE>Axiom of choice</TITLE>
+<LINK rel="stylesheet" type="text/css" href="style.css">
+<SCRIPT language="JavaScript">
+<!--
+      function getAbout () { parent.linksboven.location = "logo.html"; }
+       function getWork () { parent.linksboven.location = "logowork.html"; }
+      function getDefault () { parent.linksboven.location = "logo.html"; }
+      function getContact () { parent.linksboven.location = "logocontact.html"; }
+      function getLists () { parent.linksboven.location = "logolists.html"; }
+      function getLinks () { parent.linksboven.location = "logolinks.html"; }
+      function getRecShops () { parent.linksboven.location = "logorecshops.html"; }
+// -->
+
+</SCRIPT>
+</HEAD>
+<BODY>
+<A HREF="about.html" ONCLICK="getAbout()" TARGET="rechts"><IMG SRC="images/aboutbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="index.html" ONCLICK="getWork()" TARGET="_top"><IMG SRC="images/workbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="frontpage.html" ONCLICK="getDefault()" TARGET="rechts"><IMG SRC="images/homebtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="contact.html" ONCLICK="getContact()" TARGET="rechts"><IMG SRC="images/contactbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<!--
+<A HREF="news03.html" ONCLICK="getNews()" TARGET="rechts"><IMG SRC="images/newsbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+-->
+<A HREF="bandlinks.html" ONCLICK="getLinks()" TARGET="rechts"><IMG SRC="images/bandlinksbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="labellinks.html" ONCLICK="getLinks()" TARGET="rechts"><IMG SRC="images/labellinksbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="genlinks.html" ONCLICK="getLinks()" TARGET="rechts"><IMG SRC="images/proglinksbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="musiclinks.html" ONCLICK="getLinks()" TARGET="rechts"><IMG SRC="images/musiclinksbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<A HREF="recshops.html" ONCLICK="getRecShops()" TARGET="rechts"><IMG SRC="images/recshopsbtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+<P>
+<A HREF="http://www.iopages.nl/" TARGET="_top"><IMG SRC="images/iobtn.jpg" WIDTH=175 HEIGHT=21 BORDER=0></A>
+</BODY>
+</HTML>
+
+
+
+

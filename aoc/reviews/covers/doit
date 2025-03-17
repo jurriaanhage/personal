@@ -1,0 +1,5 @@
+#!/bin/tcsh
+foreach file (*.gif)
+  gif2png -O $file
+end
+

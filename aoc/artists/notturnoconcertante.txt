@@ -1,0 +1,24 @@
+<HTML>
+<HEAD>
+<TITLE>Notturno Concertante</TITLE>
+<LINK rel="stylesheet" type="text/css" href="../style.css">
+</HEAD>
+
+<BODY>
+<CENTER>
+<A HREF="../progrock.html" TARGET="_top">Home</A>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF="../bandlinksN.html">Artist links</A></CENTER>
+<HR>
+<H1>Notturno Concertante</H1>
+
+<P>An Italian self-made band. Going for quite some time already, I have tapes
+dating quite a way back. And the releases are coming slow but steady.
+
+<H2>Reviews and samples</H2>
+
+<UL>
+<LI><A HREF="../reviews/cdsampler.html">CD Sampler</A>
+<LI><A HREF="../reviews/rescrivereilpassato.html">Riscrivere Il Passato</A>
+</UL>
+
+</BODY>
+</HTML>
